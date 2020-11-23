@@ -1,5 +1,6 @@
 <template>
   <div id="app">
+    <!-- Toolbar -->
     <div id="toolbar">
       <button @click="readQrCode">neuen QR-Code einlesen</button>
       <button @click="displayQrCode(profile)">meinen QR-Code anzeigen</button>
@@ -11,11 +12,15 @@
         <pre>{{contactToDisplay}}</pre>
       </center>
     </div>
+
+    <!-- QR Reader -->
     <div id="qrReader" class="modal" :hidden="!showQrReader">
       <div class="close-modal" @click="showQrReader = !showQrReader">X</div>
       <video ref="qrReaderVideo"></video>
       <canvas ref="qrReaderImage" hidden></canvas>
     </div>
+
+    <!-- Eigenes Profil -->
     <div id="profile">
       <h3>Mein Profil</h3>
       <h6>Name:</h6>
@@ -25,9 +30,12 @@
       <h6>Telefonnummer:</h6>
       <input type="tel" placeholder="Telefonnummer" v-model="profile.phone" />
     </div>
+
+    <!-- Liste von Kontakten -->
     <div id="contacts">
       <h3>Eingelesene Kontakte</h3>
       <div id="no-contacts" v-if="contacts.length == 0">Es sind noch keine Kontakte vorhanden.</div>
+
       <div class="contact" v-for="c in contacts" :key="c.id">
         <div class="contact-name">{{c.name}}</div>
         <div class="contact-email">{{c.email}}</div>
@@ -51,31 +59,41 @@ import contactService from '@/services/contactService';
 export default {
   data() {
     return {
+      // Booleans für die Fenster, die zwischendurch angezeigt werden
       showQrDisplay: false,
       showQrReader: false,
+
+      // MD5-Hash des Kontaks, der angezeigt wird (nur zur Kontrolle)
       contactToDisplay: null,
+
+      // eigenes Profil
       profile: {
         name: null,
         email: null,
         phone: null,
       },
+
+      // Liste der gescannten Kontakte
       contacts: [],
     };
   },
-  
+
   methods: {
+    // über Object Destructuring werden die Funktionen der Services in methods aufgenommen
     ...contactService,
     ...profileService,
+
+    // lädt Daten von den Services in den View
     loadData() {
       this.contacts = this.getContacts().reverse();
       this.profile = this.getProfile();
     },
-    updateProfile() {
-      this.setProfile(this.profile);
-    },
+
+    // QR Code einlesen
     async readQrCode() {
       this.showQrReader = true;
 
+      // das Video von der Webcam wird in einem HTML-Element angezeigt
       const { qrReaderVideo } = this.$refs;
       const { qrReaderImage } = this.$refs;
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -87,17 +105,23 @@ export default {
       qrReaderVideo.srcObject = stream;
       qrReaderVideo.play();
 
+      // mit einem Intervall von 10 Millisekunden wird das Video auf QR-Codes geprüft
       const scanInterval = setInterval(() => {
+        // die Prüfung findet erst statt, wenn das Video läuft
         if (qrReaderVideo.readyState === qrReaderVideo.HAVE_ENOUGH_DATA) {
           qrReaderImage.height = qrReaderVideo.videoHeight;
           qrReaderImage.width = qrReaderVideo.videoWidth;
+
+          // Standbild wird aus dem Video erzeugt
           qrReaderImage.getContext('2d').drawImage(qrReaderVideo, 0, 0, qrReaderImage.width, qrReaderImage.height);
           const imageData = qrReaderImage.getContext('2d').getImageData(0, 0, qrReaderImage.width, qrReaderImage.height);
 
+          // Standbild wird in die QR-Funktion gegeben
           const code = jsQR(imageData.data, imageData.width, imageData.height, {
             inversionAttempts: 'dontInvert',
           });
 
+          // es wurde ein QR-Code gefunden, also wird der Kontakt angelegt
           if (code && code.data.length > 1) {
             // alert(md5(code.data));
             this.createContact(JSON.parse(code.data));
@@ -106,6 +130,7 @@ export default {
           }
         }
 
+        // der Reader wurde geschlossen, also wird das Intervall & Video beendet
         if (this.showQrReader == false) {
           clearInterval(scanInterval);
           stream.getTracks().forEach((track) => {
@@ -115,6 +140,8 @@ export default {
         }
       }, 10);
     },
+
+    // QR-Code für Kontakt anzeigen
     displayQrCode(contact) {
       const c = JSON.stringify({
         name: contact.name,
@@ -122,10 +149,13 @@ export default {
         phone: contact.phone,
       });
 
+      // der Kontakt wird per JSON-String als QR-Code angezeigt
       QRCode.toCanvas(this.$refs.qrDisplay, c);
       this.contactToDisplay = md5(c);
       this.showQrDisplay = true;
     },
+
+    // Kontakt mithilfe des Services löschen
     clickDelete(contactId) {
       this.deleteContact(contactId);
       this.loadData();
@@ -133,11 +163,16 @@ export default {
   },
 
   watch: {
-    'profile.name': 'updateProfile',
-    'profile.email': 'updateProfile',
-    'profile.phone': 'updateProfile',
+    // immer wenn sich das eigene Profil ändert, sollen die Änderungen gespeichert werden
+    profile: {
+      handler() {
+        this.setProfile(this.profile);
+      },
+      deep: true,
+    },
   },
 
+  // beim Öffnen der Seite werden die Daten direkt geladen
   mounted() {
     this.loadData();
   },
@@ -148,6 +183,7 @@ export default {
 * {
   box-sizing: border-box;
 }
+
 body,
 html {
   padding: 0;
@@ -156,6 +192,7 @@ html {
   font-family: Arial, Helvetica, sans-serif;
   background-color: #eee;
 }
+
 #app {
   max-width: 400px;
   height: 100%;
@@ -231,6 +268,7 @@ html {
         margin-bottom: 5px;
       }
       .contact-email {
+        // kein besonderes Styling
       }
       .contact-phone {
         font-style: italic;
