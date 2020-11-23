@@ -62,6 +62,7 @@ export default {
       contacts: [],
     };
   },
+  
   methods: {
     ...contactService,
     ...profileService,
@@ -130,11 +131,13 @@ export default {
       this.loadData();
     },
   },
+
   watch: {
     'profile.name': 'updateProfile',
     'profile.email': 'updateProfile',
     'profile.phone': 'updateProfile',
   },
+
   mounted() {
     this.loadData();
   },

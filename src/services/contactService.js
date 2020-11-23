@@ -1,6 +1,8 @@
 
 const localStorageKey = 'ct-js-qr-contacts';
+
 const setContacts = (contacts) => localStorage.setItem(localStorageKey, btoa(JSON.stringify(contacts)));
+
 const getContacts = () => {
   const jsonString = localStorage.getItem(localStorageKey) || btoa('[]');
 
