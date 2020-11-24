@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR-Code generieren</title>
+</head>
+
+<body>
+    <canvas id="qrDisplay"></canvas>
+</body>
+
+<script src="../qrcode.js"></script>
+<script>
+    function displayQrCode(data) {
+        const qrDisplay = document.getElementById('qrDisplay');
+        QRCode.toCanvas(qrDisplay, data);
+    }
+
+    const userInput = prompt('Geben Sie eine Zeichenkette ein, die als QR-Code dargestellt werden soll:');
+
+    displayQrCode(userInput);
+</script>
+</html>
