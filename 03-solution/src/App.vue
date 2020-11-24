@@ -97,9 +97,7 @@ export default {
       const { qrReaderVideo } = this.$refs;
       const { qrReaderImage } = this.$refs;
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: 'environment',
-        },
+        video: { facingMode: 'environment', },
         audio: false,
       });
       qrReaderVideo.srcObject = stream;
@@ -109,15 +107,15 @@ export default {
       const scanInterval = setInterval(() => {
         // die Prüfung findet erst statt, wenn das Video läuft
         if (qrReaderVideo.readyState === qrReaderVideo.HAVE_ENOUGH_DATA) {
-          qrReaderImage.height = qrReaderVideo.videoHeight;
-          qrReaderImage.width = qrReaderVideo.videoWidth;
+          const height = qrReaderImage.height = qrReaderVideo.videoHeight;
+          const width = qrReaderImage.width = qrReaderVideo.videoWidth;
 
           // Standbild wird aus dem Video erzeugt
-          qrReaderImage.getContext('2d').drawImage(qrReaderVideo, 0, 0, qrReaderImage.width, qrReaderImage.height);
-          const imageData = qrReaderImage.getContext('2d').getImageData(0, 0, qrReaderImage.width, qrReaderImage.height);
+          qrReaderImage.getContext('2d').drawImage(qrReaderVideo, 0, 0, width, height);
+          const { data } = qrReaderImage.getContext('2d').getImageData(0, 0, width, height);
 
           // Standbild wird in die QR-Funktion gegeben
-          const code = jsQR(imageData.data, imageData.width, imageData.height, {
+          const code = jsQR(data, width, height, {
             inversionAttempts: 'dontInvert',
           });
 
