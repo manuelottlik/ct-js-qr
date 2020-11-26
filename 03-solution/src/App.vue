@@ -101,7 +101,6 @@ export default {
 
       // das Video von der Webcam wird in einem HTML-Element angezeigt
       const qrReaderVideo = document.getElementById('qrReaderVideo');
-      const qrReaderImage = document.getElementById('qrReaderImage');
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'environment' },
         audio: false,
@@ -110,42 +109,46 @@ export default {
       qrReaderVideo.play();
 
       // mit einem Intervall von 10 Millisekunden wird das Video auf QR-Codes geprüft
-      const scanInterval = setInterval(() => {
-        // die Prüfung findet erst statt, wenn das Video läuft
-        if (qrReaderVideo.readyState !== qrReaderVideo.HAVE_ENOUGH_DATA) {
-          return null;
-        }
-        const height = qrReaderImage.height = qrReaderVideo.videoHeight;
-        const width = qrReaderImage.width = qrReaderVideo.videoWidth;
+      const interval = setInterval(() => this.checkForQrCode(qrReaderVideo, stream, interval), 10);
+    },
 
-        // Standbild wird aus dem Video erzeugt
-        qrReaderImage.getContext('2d').drawImage(qrReaderVideo, 0, 0, width, height);
-        const { data } = qrReaderImage.getContext('2d').getImageData(0, 0, width, height);
+    checkForQrCode(video, stream, interval) {
+      // die Prüfung findet erst statt, wenn das Video läuft
+      if (video.readyState !== video.HAVE_ENOUGH_DATA) {
+        return;
+      }
 
-        // Standbild wird in die QR-Funktion gegeben
-        const code = jsQR(data, width, height);
+      const qrReaderImage = document.getElementById('qrReaderImage');
+      const height = qrReaderImage.height = video.videoHeight;
+      const width = qrReaderImage.width = video.videoWidth;
 
-        // es wurde ein QR-Code gefunden, also wird der Kontakt angelegt
-        if (code && code.data.length > 1) {
-          this.createContact(JSON.parse(code.data));
-          this.loadData();
-          this.showQrReader = false;
-        }
+      // Standbild wird aus dem Video erzeugt
+      qrReaderImage.getContext('2d').drawImage(video, 0, 0, width, height);
+      const { data } = qrReaderImage.getContext('2d').getImageData(0, 0, width, height);
 
-        // der Reader wurde geschlossen, also wird das Intervall & Video beendet
-        if (this.showQrReader == false) {
-          clearInterval(scanInterval);
-          stream.getTracks().forEach((track) => {
-            track.stop();
-          });
-          qrReaderVideo.srcObject = null;
-        }
-      }, 10);
+      // Standbild wird in die QR-Funktion gegeben
+      const code = jsQR(data, width, height);
+
+      // es wurde ein QR-Code gefunden, also wird der Kontakt angelegt
+      if (code && code.data.length > 1) {
+        this.createContact(JSON.parse(code.data));
+        this.loadData();
+        this.showQrReader = false;
+      }
+
+      // der Reader wurde geschlossen, also wird das Intervall & Video beendet
+      if (this.showQrReader == false) {
+        clearInterval(interval);
+        stream.getTracks().forEach((track) => {
+          track.stop();
+        });
+        video.srcObject = null;
+      }
     },
 
     // QR-Code für Kontakt anzeigen
     displayQrCode(contact) {
-      let c = JSON.stringify({
+      contact = JSON.stringify({
         name: contact.name,
         email: contact.email,
         phone: contact.phone,
@@ -154,8 +157,8 @@ export default {
       const qrDisplay = document.getElementById('qrDisplay');
 
       // der Kontakt wird per JSON-String als QR-Code angezeigt
-      QRCode.toCanvas(qrDisplay, c);
-      this.contactToDisplay = md5(c);
+      QRCode.toCanvas(qrDisplay, contact);
+      this.contactToDisplay = md5(contact);
       this.showQrDisplay = true;
     },
 
