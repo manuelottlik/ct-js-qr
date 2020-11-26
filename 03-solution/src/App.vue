@@ -3,11 +3,10 @@
     <!-- Toolbar -->
     <div id="toolbar">
       <button @click="readQrCode">neuen QR-Code einlesen</button>
-      <button @click="displayQrCode(profile)">meinen QR-Code anzeigen</button>
     </div>
-    <div id="qrDisplay" class="modal" :hidden="!showQrDisplay">
+    <div id="qrDisplayModal" class="modal" :hidden="!showQrDisplay">
       <div class="close-modal" @click="showQrDisplay = !showQrDisplay">X</div>
-      <canvas ref="qrDisplay"></canvas>
+      <canvas id="qrDisplay"></canvas>
       <center>
         <pre>{{contactToDisplay}}</pre>
       </center>
@@ -16,8 +15,8 @@
     <!-- QR Reader -->
     <div id="qrReader" class="modal" :hidden="!showQrReader">
       <div class="close-modal" @click="showQrReader = !showQrReader">X</div>
-      <video ref="qrReaderVideo"></video>
-      <canvas ref="qrReaderImage" hidden></canvas>
+      <video id="qrReaderVideo"></video>
+      <canvas id="qrReaderImage" hidden></canvas>
     </div>
 
     <!-- Eigenes Profil -->
@@ -29,6 +28,7 @@
       <input type="email" placeholder="E-Mail Adresse" v-model="profile.email" />
       <h6>Telefonnummer:</h6>
       <input type="tel" placeholder="Telefonnummer" v-model="profile.phone" />
+      <canvas id="myQrDisplay"></canvas>
     </div>
 
     <!-- Liste von Kontakten -->
@@ -89,15 +89,21 @@ export default {
       this.profile = this.getProfile();
     },
 
+    // Kontakt mithilfe des Services löschen
+    clickDelete(contactId) {
+      this.deleteContact(contactId);
+      this.loadData();
+    },
+
     // QR Code einlesen
     async readQrCode() {
       this.showQrReader = true;
 
       // das Video von der Webcam wird in einem HTML-Element angezeigt
-      const { qrReaderVideo } = this.$refs;
-      const { qrReaderImage } = this.$refs;
+      const qrReaderVideo = document.getElementById('qrReaderVideo');
+      const qrReaderImage = document.getElementById('qrReaderImage');
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', },
+        video: { facingMode: 'environment' },
         audio: false,
       });
       qrReaderVideo.srcObject = stream;
@@ -106,26 +112,24 @@ export default {
       // mit einem Intervall von 10 Millisekunden wird das Video auf QR-Codes geprüft
       const scanInterval = setInterval(() => {
         // die Prüfung findet erst statt, wenn das Video läuft
-        if (qrReaderVideo.readyState === qrReaderVideo.HAVE_ENOUGH_DATA) {
-          const height = qrReaderImage.height = qrReaderVideo.videoHeight;
-          const width = qrReaderImage.width = qrReaderVideo.videoWidth;
+        if (qrReaderVideo.readyState !== qrReaderVideo.HAVE_ENOUGH_DATA) {
+          return null;
+        }
+        const height = qrReaderImage.height = qrReaderVideo.videoHeight;
+        const width = qrReaderImage.width = qrReaderVideo.videoWidth;
 
-          // Standbild wird aus dem Video erzeugt
-          qrReaderImage.getContext('2d').drawImage(qrReaderVideo, 0, 0, width, height);
-          const { data } = qrReaderImage.getContext('2d').getImageData(0, 0, width, height);
+        // Standbild wird aus dem Video erzeugt
+        qrReaderImage.getContext('2d').drawImage(qrReaderVideo, 0, 0, width, height);
+        const { data } = qrReaderImage.getContext('2d').getImageData(0, 0, width, height);
 
-          // Standbild wird in die QR-Funktion gegeben
-          const code = jsQR(data, width, height, {
-            inversionAttempts: 'dontInvert',
-          });
+        // Standbild wird in die QR-Funktion gegeben
+        const code = jsQR(data, width, height);
 
-          // es wurde ein QR-Code gefunden, also wird der Kontakt angelegt
-          if (code && code.data.length > 1) {
-            // alert(md5(code.data));
-            this.createContact(JSON.parse(code.data));
-            this.loadData();
-            this.showQrReader = false;
-          }
+        // es wurde ein QR-Code gefunden, also wird der Kontakt angelegt
+        if (code && code.data.length > 1) {
+          this.createContact(JSON.parse(code.data));
+          this.loadData();
+          this.showQrReader = false;
         }
 
         // der Reader wurde geschlossen, also wird das Intervall & Video beendet
@@ -141,22 +145,23 @@ export default {
 
     // QR-Code für Kontakt anzeigen
     displayQrCode(contact) {
-      const c = JSON.stringify({
+      let c = JSON.stringify({
         name: contact.name,
         email: contact.email,
         phone: contact.phone,
       });
 
+      const qrDisplay = document.getElementById('qrDisplay');
+
       // der Kontakt wird per JSON-String als QR-Code angezeigt
-      QRCode.toCanvas(this.$refs.qrDisplay, c);
+      QRCode.toCanvas(qrDisplay, c);
       this.contactToDisplay = md5(c);
       this.showQrDisplay = true;
     },
 
-    // Kontakt mithilfe des Services löschen
-    clickDelete(contactId) {
-      this.deleteContact(contactId);
-      this.loadData();
+    displayMyQrCode() {
+      const myQrDisplay = document.getElementById('myQrDisplay');
+      QRCode.toCanvas(myQrDisplay, JSON.stringify(this.profile));
     },
   },
 
@@ -165,6 +170,7 @@ export default {
     profile: {
       handler() {
         this.setProfile(this.profile);
+        this.displayMyQrCode();
       },
       deep: true,
     },
@@ -224,7 +230,7 @@ html {
     }
   }
 
-  #qrDisplay {
+  #qrDisplayModal {
     canvas {
       width: 100% !important;
       height: auto !important;
@@ -246,6 +252,12 @@ html {
       width: 100%;
       padding: 5px;
       margin: 5px 0;
+    }
+
+    #myQrDisplay {
+      margin: 5px 25px;
+      width: calc(100% - 50px) !important;
+      height: auto !important;
     }
   }
 

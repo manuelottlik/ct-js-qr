@@ -14,6 +14,7 @@ module.exports = {
     'no-restricted-globals': 'warn',
     'import/extensions': 'off',
     'max-len': 'off',
+    'no-multi-assign': 'off',
     'no-return-assign': 'off',
     'no-param-reassign': 'warn',
     eqeqeq: 'off',
