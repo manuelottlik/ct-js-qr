@@ -99,50 +99,11 @@ export default {
     async readQrCode() {
       this.showQrReader = true;
 
-      // das Video von der Webcam wird in einem HTML-Element angezeigt
-      const qrReaderVideo = document.getElementById('qrReaderVideo');
-      const qrReaderImage = document.getElementById('qrReaderImage');
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
-        audio: false,
-      });
-      qrReaderVideo.srcObject = stream;
-      qrReaderVideo.play();
-
-      // mit einem Intervall von 10 Millisekunden wird das Video auf QR-Codes geprüft
-      const interval = setInterval(() => this.checkForQrCode(qrReaderVideo, stream, interval), 10);
+      // TODO: hier Code aus vorigen Beispielen einfügen
     },
 
     async checkForQrCode(video, stream, interval) {
-      // die Prüfung findet erst statt, wenn das Video läuft
-        if (video.readyState !== video.HAVE_ENOUGH_DATA) {
-          return null;
-        }
-        const height = qrReaderImage.height = video.videoHeight;
-        const width = qrReaderImage.width = video.videoWidth;
-
-        // Standbild wird aus dem Video erzeugt
-        qrReaderImage.getContext('2d').drawImage(video, 0, 0, width, height);
-        const { data } = qrReaderImage.getContext('2d').getImageData(0, 0, width, height);
-
-        // Standbild wird in die QR-Funktion gegeben
-        const code = jsQR(data, width, height);
-
-        // es wurde ein QR-Code gefunden, also wird der Kontakt angelegt
-        if (code && code.data.length > 1) {
-          this.createContact(JSON.parse(code.data));
-          this.loadData();
-          this.showQrReader = false;
-        }
-
-        // der Reader wurde geschlossen, also wird das Intervall & Video beendet
-        if (this.showQrReader == false) {
-          clearInterval(interval);
-          stream.getTracks().forEach((track) => {
-            track.stop();
-          });
-          video.srcObject = null;
-        }
+      // TODO: hier Code aus vorigen Beispielen einfügen
     },
 
     // QR-Code für Kontakt anzeigen
@@ -153,17 +114,14 @@ export default {
         phone: contact.phone,
       });
 
-      const qrDisplay = document.getElementById('qrDisplay');
+      // TODO: hier Code aus vorigen Beispielen einfügen
 
-      // der Kontakt wird per JSON-String als QR-Code angezeigt
-      QRCode.toCanvas(qrDisplay, contact);
       this.contactToDisplay = md5(contact);
       this.showQrDisplay = true;
     },
 
     displayMyQrCode() {
-      const myQrDisplay = document.getElementById('myQrDisplay');
-      QRCode.toCanvas(myQrDisplay, JSON.stringify(this.profile));
+      // TODO: hier Code aus vorigen Beispielen einfügen
     },
   },
 
