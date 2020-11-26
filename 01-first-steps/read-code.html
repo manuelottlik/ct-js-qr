@@ -16,7 +16,7 @@
     function checkForQrCode(video) {
         // die Prüfung findet erst statt, wenn das Video läuft
         if (video.readyState !== video.HAVE_ENOUGH_DATA) {
-            return null;
+            return;
         }
         
         const qrReaderImage = document.getElementById('qrReaderImage');

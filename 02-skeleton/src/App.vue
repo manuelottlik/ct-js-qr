@@ -110,16 +110,19 @@ export default {
       qrReaderVideo.play();
 
       // mit einem Intervall von 10 Millisekunden wird das Video auf QR-Codes geprüft
-      const scanInterval = setInterval(() => {
-        // die Prüfung findet erst statt, wenn das Video läuft
-        if (qrReaderVideo.readyState !== qrReaderVideo.HAVE_ENOUGH_DATA) {
+      const interval = setInterval(() => this.checkForQrCode(qrReaderVideo, stream, interval), 10);
+    },
+
+    async checkForQrCode(video, stream, interval) {
+      // die Prüfung findet erst statt, wenn das Video läuft
+        if (video.readyState !== video.HAVE_ENOUGH_DATA) {
           return null;
         }
-        const height = qrReaderImage.height = qrReaderVideo.videoHeight;
-        const width = qrReaderImage.width = qrReaderVideo.videoWidth;
+        const height = qrReaderImage.height = video.videoHeight;
+        const width = qrReaderImage.width = video.videoWidth;
 
         // Standbild wird aus dem Video erzeugt
-        qrReaderImage.getContext('2d').drawImage(qrReaderVideo, 0, 0, width, height);
+        qrReaderImage.getContext('2d').drawImage(video, 0, 0, width, height);
         const { data } = qrReaderImage.getContext('2d').getImageData(0, 0, width, height);
 
         // Standbild wird in die QR-Funktion gegeben
@@ -134,18 +137,17 @@ export default {
 
         // der Reader wurde geschlossen, also wird das Intervall & Video beendet
         if (this.showQrReader == false) {
-          clearInterval(scanInterval);
+          clearInterval(interval);
           stream.getTracks().forEach((track) => {
             track.stop();
           });
-          qrReaderVideo.srcObject = null;
+          video.srcObject = null;
         }
-      }, 10);
     },
 
     // QR-Code für Kontakt anzeigen
     displayQrCode(contact) {
-      let c = JSON.stringify({
+      contact = JSON.stringify({
         name: contact.name,
         email: contact.email,
         phone: contact.phone,
@@ -154,8 +156,8 @@ export default {
       const qrDisplay = document.getElementById('qrDisplay');
 
       // der Kontakt wird per JSON-String als QR-Code angezeigt
-      QRCode.toCanvas(qrDisplay, c);
-      this.contactToDisplay = md5(c);
+      QRCode.toCanvas(qrDisplay, contact);
+      this.contactToDisplay = md5(contact);
       this.showQrDisplay = true;
     },
 
