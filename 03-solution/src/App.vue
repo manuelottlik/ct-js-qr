@@ -63,7 +63,7 @@ export default {
       showQrDisplay: false,
       showQrReader: false,
 
-      // MD5-Hash des Kontaks, der angezeigt wird (nur zur Kontrolle)
+      // MD5-Hash des Kontakts, der angezeigt wird (nur zur Kontrolle)
       contactToDisplay: null,
 
       // eigenes Profil
@@ -79,7 +79,7 @@ export default {
   },
 
   methods: {
-    // über Object Destructuring werden die Funktionen der Services in methods aufgenommen
+    // über Object-Destructuring werden die Funktionen der Services in methods aufgenommen
     ...contactService,
     ...profileService,
 
@@ -126,7 +126,7 @@ export default {
       qrReaderImage.getContext('2d').drawImage(video, 0, 0, width, height);
       const { data } = qrReaderImage.getContext('2d').getImageData(0, 0, width, height);
 
-      // Standbild wird in die QR-Funktion gegeben
+      // Standbild wird in die QR-Funktion übergeben
       const code = jsQR(data, width, height);
 
       // es wurde ein QR-Code gefunden, also wird der Kontakt angelegt
@@ -136,7 +136,7 @@ export default {
         this.showQrReader = false;
       }
 
-      // der Reader wurde geschlossen, also wird das Intervall & Video beendet
+      // der Reader wurde geschlossen, also werden das Intervall & Video beendet
       if (this.showQrReader == false) {
         clearInterval(interval);
         stream.getTracks().forEach((track) => {
@@ -169,7 +169,7 @@ export default {
   },
 
   watch: {
-    // immer wenn sich das eigene Profil ändert, sollen die Änderungen gespeichert werden
+    // immer dann, wenn sich das eigene Profil ändert, sollen die Änderungen gespeichert werden
     profile: {
       handler() {
         this.setProfile(this.profile);
