@@ -1,4 +1,6 @@
-# ct-js-qr
+# Pixel mit Bedeutung
+
+Beispielprojekt zum Artikel "Pixel mit Bedeutung" aus c't 2021, Heft 4.
 
 ## Project setup
 ```
